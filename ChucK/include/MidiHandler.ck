@@ -1,0 +1,183 @@
+// MIDI Event IDs
+
+int codes[0];
+
+144 => codes["NoteOn"];
+128 => codes["NoteOff"];
+176 => codes["ControlChange"];
+
+class MidiMessage
+{
+    fun int[] data()
+    {
+        return [ 0, 0, 0 ];
+    }
+}
+
+class StatusMessage extends MidiMessage
+{
+    int id;
+	1 => int channel;
+}
+
+class NoteMessage extends StatusMessage
+{
+    int pitch;
+    int velocity;
+
+    fun int[] data()
+    {
+        return [ id + channel - 1, pitch, velocity ];
+    }
+}
+
+class NoteOnMessage extends NoteMessage
+{
+    codes["NoteOn"] => id;
+    100 => velocity;
+}
+
+class NoteOffMessage extends NoteMessage
+{
+    codes["NoteOff"] => id;
+    0 => velocity;
+}
+
+class ControlChangeMessage extends StatusMessage
+{
+    codes["ControlChange"] => id;
+    8 => int control;
+    127 => int value;
+
+    fun int [] data()
+    {
+        return [ id + channel - 1, control, value ];
+    }
+}
+
+class MidiHandler
+{
+    // Members
+
+    MidiIn input;
+    MidiOut output;
+
+    false => int local;
+	false => int isOpen;
+
+	fun void open(int inputDevice, int outputDevice)
+	{
+		if(isOpen)
+		{
+			return;
+		}
+
+		// Constructor
+
+		if(!input.open(inputDevice))
+		{
+			<<< "Could not open MIDI input device." >>>;
+			me.exit();
+		}
+
+		if(!output.open(outputDevice))
+		{
+			<<< "Could not open MIDI output device." >>>;
+			me.exit();
+		}
+
+		true => isOpen;
+	}
+
+    fun void send(MidiMessage message)
+    {
+		open(0, 0);
+
+        message.data() @=> int data[];
+
+        if(data.cap() == 3)
+        {
+            MidiMsg out;
+
+            data[0] => out.data1;
+            data[1] => out.data2;
+            data[2] => out.data3;
+
+            if(local)
+            {
+                handleMessage(out);
+            }
+
+            output.send(out);
+        }
+        else
+        {
+            <<< "Invalid data() for MidiMessage." >>>;
+        }
+    }
+
+    fun void run()
+    {
+		open(0, 0);
+
+        // Now handle incoming events.
+
+        MidiMsg message;
+
+        while(true)
+        {
+            input => now;
+
+            while(input.recv(message))
+            {
+                handleMessage(message);
+            }
+        }
+    }
+
+	fun int isChannel(int code, int base)
+	{
+		if(code >= base && code < base + 16)
+		{
+			return code - base + 1;
+		}
+		return 0;
+	}
+
+    fun void handleMessage(MidiMsg message)
+    {
+        message.data1 => int code;
+
+        if(isChannel(code, codes["NoteOn"]))
+        {
+            spork ~ noteOn(isChannel(code, codes["NoteOn"]), message.data2, message.data3);
+        }
+        else if(isChannel(code, codes["NoteOff"]))
+        {
+            spork ~ noteOff(isChannel(code, codes["NoteOff"]), message.data2, message.data3);
+        }
+        else if(isChannel(code, codes["ControlChange"]))
+        {
+            spork ~ controlChange(isChannel(code, codes["ControlChange"]), message.data2, message.data3);
+        }
+        else
+        {
+            <<< "Unhandled MIDI Message: ", message.data1, message.data2, message.data3 >>>;
+        }
+    }
+
+    fun void noteOn(int channel, int pitch, int velocity)
+    {
+        <<< "Note On: ", channel, pitch, velocity >>>;
+    }
+
+    fun void noteOff(int channel, int pitch, int velocity)
+    {
+        <<< "Note Off: ", channel, pitch, velocity >>>;
+    }
+
+    fun void controlChange(int channel, int control, int value)
+    {
+        <<< "Control Change: ", channel, control, value >>>;
+    }
+}
