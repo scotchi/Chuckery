@@ -12,7 +12,7 @@ class Sequence
 
     false => int notesAdvanceTime;
 
-	1 => int channel;
+    1 => int channel;
 
     setBPM(130.0);
 
@@ -70,7 +70,7 @@ class Sequence
     fun void setBPM(float beats)
     {
         beats => bpm;
-        
+
         (1::minute / bpm * 4) => whole;
 
         whole / 2  => half;
@@ -88,7 +88,7 @@ class Sequence
     {
         return 2.0 / 3.0 * original;
     }
-    
+
     fun void backgroundNote(int pitch, int velocity, dur length)
     {
         if(output == null)
@@ -100,7 +100,7 @@ class Sequence
         NoteOnMessage on;
         velocity => on.velocity;
         pitch => on.pitch;
-		channel => on.channel;
+        channel => on.channel;
 
         output.send(on);
 
@@ -109,7 +109,7 @@ class Sequence
         NoteOffMessage off;
 
         pitch => off.pitch;
-		channel => off.channel;
+        channel => off.channel;
 
         output.send(off);
     }

@@ -17,7 +17,7 @@ class MidiMessage
 class StatusMessage extends MidiMessage
 {
     int id;
-	1 => int channel;
+    1 => int channel;
 }
 
 class NoteMessage extends StatusMessage
@@ -63,35 +63,35 @@ class MidiHandler
     MidiOut output;
 
     false => int local;
-	false => int isOpen;
+    false => int isOpen;
 
-	fun void open(int inputDevice, int outputDevice)
-	{
-		if(isOpen)
-		{
-			return;
-		}
+    fun void open(int inputDevice, int outputDevice)
+    {
+        if(isOpen)
+        {
+            return;
+        }
 
-		// Constructor
+        // Constructor
 
-		if(!input.open(inputDevice))
-		{
-			<<< "Could not open MIDI input device." >>>;
-			me.exit();
-		}
+        if(!input.open(inputDevice))
+        {
+            <<< "Could not open MIDI input device." >>>;
+            me.exit();
+        }
 
-		if(!output.open(outputDevice))
-		{
-			<<< "Could not open MIDI output device." >>>;
-			me.exit();
-		}
+        if(!output.open(outputDevice))
+        {
+            <<< "Could not open MIDI output device." >>>;
+            me.exit();
+        }
 
-		true => isOpen;
-	}
+        true => isOpen;
+    }
 
     fun void send(MidiMessage message)
     {
-		open(0, 0);
+        open(0, 0);
 
         message.data() @=> int data[];
 
@@ -118,7 +118,7 @@ class MidiHandler
 
     fun void run()
     {
-		open(0, 0);
+        open(0, 0);
 
         // Now handle incoming events.
 
@@ -135,14 +135,14 @@ class MidiHandler
         }
     }
 
-	fun int isChannel(int code, int base)
-	{
-		if(code >= base && code < base + 16)
-		{
-			return code - base + 1;
-		}
-		return 0;
-	}
+    fun int isChannel(int code, int base)
+    {
+        if(code >= base && code < base + 16)
+        {
+            return code - base + 1;
+        }
+        return 0;
+    }
 
     fun void handleMessage(MidiMsg message)
     {
