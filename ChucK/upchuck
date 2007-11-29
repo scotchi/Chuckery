@@ -1,0 +1,210 @@
+#!/usr/bin/perl
+
+use strict;
+use IPC::Open3;
+use Cwd 'abs_path';
+use File::Basename;
+
+################################################################################
+# addOutputLine
+################################################################################
+
+our @lineMap;
+our @fileMap;
+
+sub addOutputLine
+{
+  my $file = shift(@_);
+  my $line = shift(@_);
+
+  push(@lineMap, $line);
+  push(@fileMap, $file);
+}
+
+################################################################################
+# tempName
+################################################################################
+
+sub tempName
+{
+  my $temp = `mktemp -t chuck.XXXXX`;
+  chomp($temp);
+  return $temp;
+}
+
+################################################################################
+# findFile
+################################################################################
+
+sub findFile
+{
+  my $file = shift(@_);
+
+  (-e $file) && return $file;
+  (-e "$file.ck") && return "$file.ck";
+
+  my @dirs = split(":", $ENV{"CHUCK_DIRS"});
+
+  foreach my $dir (@dirs)
+  {
+    (-e "$dir/$file") && return "$dir/$file";
+    (-e "$dir/$file.ck") && return "$dir/$file.ck";
+  }
+
+  return "";
+}
+
+################################################################################
+# include
+################################################################################
+
+sub include
+{
+  our %includes;
+
+  my $file = shift(@_);
+  my $found = findFile($file);
+
+  if(length($found) == 0)
+  {
+    die "Could not include \"$file\"";
+  }
+
+  $file = $found;
+
+  if(++$includes{$file} > 1)
+  {
+    return "";
+  }
+
+  my $output;
+
+  open(INCLUDE, $file);
+
+  my @lines = <INCLUDE>;
+
+  close(INCLUDE);
+
+  my $count = 1;
+
+  foreach my $line (@lines)
+  {
+    $output .= &preprocessor($line);
+    addOutputLine($file, $count++);
+  }
+
+  return $output . "\n";
+}
+
+################################################################################
+# preprocessor
+################################################################################
+
+sub preprocessor
+{
+  my $input = shift(@_);
+
+  if($input !~ /^\s*#/)
+  {
+    return $input;
+  }
+
+  chomp($input);
+
+  my $command = $input;
+  my $argument = $input;
+
+  $command =~ s/^\s*#(\w+).*/$1/;
+  $argument =~ s/.*\((.+)\).*/$1/;
+
+  if($command =~ /include/i)
+  {
+    return include($argument);
+  }
+
+  die "Unhandled preprocess command, \"$input\"";
+}
+
+################################################################################
+# errorAdjuster
+################################################################################
+
+sub errorAdjustor
+{
+  my $temp = shift(@_);
+  my $error = shift(@_);
+
+  if($error =~ /^\[$temp\]:line/)
+  {
+    chomp($error);
+
+    my $lineNumber = $error;
+
+    $lineNumber =~ s/\[$temp\]:line\(([0-9]+)\).*/$1/;
+
+    $error =~ s/$temp/$fileMap[$lineNumber - 1]/;
+    $error =~ s/line\($lineNumber\)/line($lineMap[$lineNumber - 1])/;
+
+    return "$error\n";
+  }
+
+  return $error;
+}
+
+################################################################################
+# main
+################################################################################
+
+my $temp = tempName();
+
+open(OUTPUT, ">$temp");
+
+my $command = "chuck";
+
+while(my $arg = shift(@ARGV))
+{
+  if(!findFile($arg))
+  {
+    $command .= " $arg";
+  }
+  else
+  {
+    print OUTPUT include($arg);
+  }
+}
+
+close(OUTPUT);
+
+$command .= " $temp";
+
+if(fork() == 0)
+{
+  sleep(10);
+  unlink($temp);
+}
+else
+{
+  local(*WRITE, *READ, *ERROR);
+
+  my $pid = open3(\*WRITE, \*READ, \*ERROR, $command);
+
+  if(fork() == 0)
+  {
+    my $file = basename($temp);
+
+    while(my $line = <ERROR>)
+    {
+      print errorAdjustor($file, $line);
+    }
+  }
+  else
+  {
+    while(my $line = <READ>)
+    {
+      print $line;
+    }
+  }
+
+  waitpid($pid, 0);
+  wait();
+}
