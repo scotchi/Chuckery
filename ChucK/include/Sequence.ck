@@ -18,7 +18,7 @@ class Sequence
 
     int midi[0];
 
-    static void setMidiValues()
+    fun static void setMidiValues()
     {
         0 => midi["C-2"];   1 => midi["C#-2"];  1 => midi["Db-2"];  2 => midi["D-2"];
         3 => midi["D#-2"];  3 => midi["Eb-2"];  4 => midi["E-2"];   5 => midi["F-2"];
