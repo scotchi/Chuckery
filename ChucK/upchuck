@@ -195,7 +195,7 @@ $command .= " $temp";
 
 if(fork() == 0)
 {
-  sleep(10);
+  sleep(2);
   unlink($temp);
 }
 else
@@ -224,3 +224,5 @@ else
   waitpid($pid, 0);
   wait();
 }
+
+wait();
