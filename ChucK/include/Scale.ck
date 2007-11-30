@@ -14,7 +14,7 @@ class ScaleIterator
     int pitch;
 
     setRoot(midi["C0"]);
-    
+
     fun void setRoot(int value)
     {
         value => root;
@@ -59,7 +59,7 @@ class ScaleIterator
             <<< "No scale set." >>>;
             me.exit();
         }
-        
+
         if(!scale.steps.cap())
         {
             <<< "Empty scale." >>>;

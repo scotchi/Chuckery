@@ -59,8 +59,8 @@ class MidiHandler
 {
     // Members
 
-    MidiIn input;
-    MidiOut output;
+    MidiIn midiIn;
+    MidiOut midiOut;
 
     false => int local;
     false => int isOpen;
@@ -74,13 +74,13 @@ class MidiHandler
 
         // Constructor
 
-        if(!input.open(inputDevice))
+        if(!midiIn.open(inputDevice))
         {
             <<< "Could not open MIDI input device." >>>;
             me.exit();
         }
 
-        if(!output.open(outputDevice))
+        if(!midiOut.open(outputDevice))
         {
             <<< "Could not open MIDI output device." >>>;
             me.exit();
@@ -107,13 +107,34 @@ class MidiHandler
             {
                 handleMessage(out);
             }
-
-            output.send(out);
+			else
+			{
+				midiOut.send(out);
+			}
         }
         else
         {
             <<< "Invalid data() for MidiMessage." >>>;
         }
+    }
+
+    fun void sendNote(int channel, int pitch, int velocity, dur length)
+    {
+        NoteOnMessage on;
+        velocity => on.velocity;
+        pitch => on.pitch;
+        channel => on.channel;
+        
+        send(on);
+        
+        length => now;
+        
+        NoteOffMessage off;
+        
+        pitch => off.pitch;
+        channel => off.channel;
+        
+        send(off);
     }
 
     fun void run()
@@ -126,9 +147,9 @@ class MidiHandler
 
         while(true)
         {
-            input => now;
+            midiIn => now;
 
-            while(input.recv(message))
+            while(midiIn.recv(message))
             {
                 handleMessage(message);
             }

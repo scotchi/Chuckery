@@ -46,3 +46,34 @@ int midi[0];
 121 => midi["Db8"]; 122 => midi["D8"];  123 => midi["D#8"]; 123 => midi["Eb8"];
 124 => midi["E8"];  125 => midi["F8"];  126 => midi["F#8"]; 126 => midi["Gb8"];
 127 => midi["G8"];
+
+class MidiValues
+{
+    fun static int pitch(int value)
+    {
+        return value % 12;
+    }
+
+    fun static int octave(int value)
+    {
+        return (value - pitch(value)) / 12;
+    }
+
+    fun static int adjustedOctave(int value)
+    {
+        octave(value) => int result;
+
+        if(pitch(value) > 6)
+        {
+            result++;
+        }
+
+        return result;
+    }
+
+    fun static int build(int fromOctave, int fromPitch)
+    {
+        <<< "Build ", fromOctave, fromPitch >>>;
+        return fromOctave * 12 + fromPitch;
+    }
+}

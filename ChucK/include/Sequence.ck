@@ -41,40 +41,15 @@ class Sequence
         return 2.0 / 3.0 * original;
     }
 
-    fun void backgroundNote(int pitch, int velocity, dur length)
-    {
-        if(output == null)
-        {
-            <<< "no midi handler set" >>>;
-            me.exit();
-        }
-
-        NoteOnMessage on;
-        velocity => on.velocity;
-        pitch => on.pitch;
-        channel => on.channel;
-
-        output.send(on);
-
-        length => now;
-
-        NoteOffMessage off;
-
-        pitch => off.pitch;
-        channel => off.channel;
-
-        output.send(off);
-    }
-
     fun void note(int pitch, int velocity, dur length)
     {
         if(notesAdvanceTime)
         {
-            backgroundNote(pitch, velocity, length);
+            output.sendNote(channel, pitch, velocity, length);
         }
         else
         {
-            spork ~ backgroundNote(pitch, velocity, length);
+            spork ~ output.sendNote(channel, pitch, velocity, length);
         }
     }
 
