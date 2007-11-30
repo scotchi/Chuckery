@@ -40,9 +40,6 @@ sub findFile
 {
   my $file = shift(@_);
 
-  (-e $file) && return $file;
-  (-e "$file.ck") && return "$file.ck";
-
   my @dirs = split(":", $ENV{"CHUCK_DIRS"});
 
   foreach my $dir (@dirs)
@@ -50,6 +47,9 @@ sub findFile
     (-e "$dir/$file") && return "$dir/$file";
     (-e "$dir/$file.ck") && return "$dir/$file.ck";
   }
+
+  (-e $file) && return $file;
+  (-e "$file.ck") && return "$file.ck";
 
   return "";
 }
@@ -152,10 +152,26 @@ sub errorAdjustor
 }
 
 ################################################################################
-# main
+# signalHandler
 ################################################################################
 
-my $temp = tempName();
+our $temp = tempName();
+
+sub signalHandler
+{
+  if(-e $temp)
+  {
+    unlink($temp);
+  }
+
+  exit(0);
+}
+
+$SIG{INT} = 'signalHandler';
+
+################################################################################
+# main
+################################################################################
 
 open(OUTPUT, ">$temp");
 
