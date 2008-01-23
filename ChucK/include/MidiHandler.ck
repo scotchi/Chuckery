@@ -107,10 +107,10 @@ class MidiHandler
             {
                 handleMessage(out);
             }
-			else
-			{
-				midiOut.send(out);
-			}
+            else
+            {
+                midiOut.send(out);
+            }
         }
         else
         {
