@@ -7,16 +7,24 @@ class MidiDelay extends MidiHandler
 
     sequence.setBPM(125);
 
-    sequence.measure * 48  => dur totalLength;
-    sequence.quarter => dur totalDelay;
+    sequence.quarter * 6 * 59 => dur totalLength;
+    sequence.quarter * 4 => dur totalDelay;
 
     time end;
 
+    true => int first;
+
     fun dur delay()
     {
+        if(first)
+        {
+            false => first;
+            now + totalLength => end;
+        }
+
         if(now > end)
         {
-            now + totalLength => end;
+            return totalDelay;
         }
 
         return (1 - ((end - now) / totalLength)) * totalDelay;
