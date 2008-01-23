@@ -11,6 +11,8 @@ class Sequence
     dur eigth;
     dur sixteenth;
 
+    dur measure;
+
     false => int notesAdvanceTime;
 
     1 => int channel;
@@ -29,6 +31,10 @@ class Sequence
         whole / 4  => quarter;
         whole / 8  => eigth;
         whole / 16 => sixteenth;
+
+        // Pretend the world is 4/4
+
+        whole => measure;
     }
 
     fun dur dotted(dur original)
