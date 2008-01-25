@@ -1,3 +1,12 @@
+#include(MidiHandler)
+#include(MidiValues)
+
+fun float instantaneousBpm(float bpmStart, float bpmEnd, float position)
+{
+    return ((bpmEnd - bpmStart) * position) + bpmStart;
+    // return bpmEnd * position + bpmStart * (1.0 - position);
+}
+
 fun float durationInSeconds(float bpmStart, float bpmEnd, float beats)
 {
     10000 => int resolution;
@@ -8,9 +17,10 @@ fun float durationInSeconds(float bpmStart, float bpmEnd, float beats)
     {
         (n $ float) / (resolution $ float) => float position;
 
-        bpmStart * position + bpmEnd * (1.0 - position) => float bpmCurrent;
+        instantaneousBpm(bpmStart, bpmEnd, position) => float bpmCurrent;
 
         (beats * 60.0) / (bpmCurrent * (resolution $ float)) +=> sum;
+        // beats * (-bpmCurrent / bpmEnd + 1.5) +=> sum;
     }
 
     return sum;
@@ -40,6 +50,8 @@ fun float findStartBpm(float bpmConstant, float adjustedBeats, float constantBea
         }
     }
 
+    <<< bpmStart >>>;
+
     return bpmStart;
 }
 
@@ -53,7 +65,7 @@ fun float[] scaleBeatsInSeconds(float bpmConstant, int adjustedBeats, int consta
     {
         (i $ float) / (adjustedBeats $ float) => float position;
 
-        position * bpmConstant + (1.0 - position) * bpmStart => float currentBpm;
+        instantaneousBpm(bpmStart, bpmConstant, position) => float currentBpm;
 
         60.0 / currentBpm => float beatLength;
 
@@ -63,12 +75,23 @@ fun float[] scaleBeatsInSeconds(float bpmConstant, int adjustedBeats, int consta
     return durations;
 }
 
-scaleBeatsInSeconds(120, 3 * 4, 4 * 4) @=> float durations[];
+scaleBeatsInSeconds(125, 7 * 4, 8 * 4) @=> float durations[];
 
 <<< "Durations computed." >>>;
 
+MidiHandler handler;
+
 for(0 => int i; i < durations.cap(); i++)
 {
-    <<< durations[i] >>>;
-    durations[i]::second => now;
+    if(i > 0)
+    {
+        <<< durations[i], durations[i - 1] - durations[i] >>>;
+    }
+    else
+    {
+        <<< durations[i], 0.0 >>>;
+    }
+
+    handler.sendNote(2, midi["B1"], 100, durations[i]::second);
 }
+
