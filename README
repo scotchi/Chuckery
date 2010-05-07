@@ -1,0 +1,8 @@
+This is a collection of scripts and toolkit classes for the ChucK music
+programming language:
+
+http://chuck.cs.princeton.edu/
+
+A lot of these are general utility things not included in the base language.  Also note
+that many of them have an include syntax that's not supported in the base language and
+require my preprocessor that's also here, "upchuck".
