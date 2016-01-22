@@ -3,6 +3,7 @@
 class Control
 {
     -1 => int cc;
+    -1 => int channel;
 
     ControlDispatcher.register(this);
 
@@ -73,7 +74,8 @@ class ControlDispatcher extends MidiHandler
 
         while(node != null)
         {
-            if(node.item.cc == control)
+            if(node.item.cc == control &&
+               (node.item.channel == channel || node.item.channel == -1))
             {
                 node.item.set(value);
             }
