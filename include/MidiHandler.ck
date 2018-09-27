@@ -46,7 +46,7 @@ class NoteOffMessage extends NoteMessage
 class ControlChangeMessage extends StatusMessage
 {
     codes["ControlChange"] => id;
-    8 => int control;
+    1 => int control;
     127 => int value;
 
     fun int [] data()
@@ -135,6 +135,26 @@ class MidiHandler
         channel => off.channel;
         
         send(off);
+    }
+
+
+    fun void sendControlChange(int channel, int control, int value)
+    {
+        new ControlChangeMessage @=> ControlChangeMessage m;
+        channel => m.channel;
+        control => m.control;
+        value => m.value;
+        send(m);
+    }
+
+    fun void sendControlOn(int channel, int control)
+    {
+        sendControlChange(channel, control, 127);
+    }
+
+    fun void sendControlOff(int channel, int control)
+    {
+        sendControlChange(channel, control, 0);
     }
 
     fun void run()
